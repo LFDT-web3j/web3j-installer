@@ -5,8 +5,8 @@ $PSDefaultParameterValues['*:ErrorAction']='Stop'
 $ProgressPreference = 'SilentlyContinue'
 
 # URL to the checksum file
-$ChecksumUrl = "https://raw.githubusercontent.com/hyperledger/web3j-installer/main/checksum-windows.txt"
-$ScriptUrl = "https://raw.githubusercontent.com/hyperledger/web3j-installer/main/installer.ps1"
+$ChecksumUrl = "https://raw.githubusercontent.com/hyperledger-web3j/web3j-installer/main/checksum-windows.txt"
+$ScriptUrl = "https://raw.githubusercontent.com/hyperledger-web3j/web3j-installer/main/installer.ps1"
 
 # Function to fetch the pre-calculated checksum
 function Fetch-Checksum {
@@ -55,10 +55,10 @@ function Verify-Checksum {
 # Run checksum verification
 Verify-Checksum
 
-$web3j_version = (Invoke-WebRequest -Uri "https://api.github.com/repos/web3j/web3j-cli/releases/latest").Content | ConvertFrom-Json | Select-Object -ExpandProperty tag_name | ForEach-Object { $_.Substring(1) }
+$web3j_version = (Invoke-WebRequest -Uri "https://api.github.com/repos/hyperledger-web3j/web3j-cli/releases/latest").Content | ConvertFrom-Json | Select-Object -ExpandProperty tag_name | ForEach-Object { $_.Substring(1) }
 
 New-Item -Force -ItemType directory -Path "${env:USERPROFILE}\.web3j" | Out-Null
-$url = "https://github.com/web3j/web3j-cli/releases/download/v${web3j_version}/web3j-cli-shadow-${web3j_version}.zip"
+$url = "https://github.com/hyperledger-web3j/web3j-cli/releases/download/v${web3j_version}/web3j-cli-shadow-${web3j_version}.zip"
 $output = "${env:USERPROFILE}\.web3j\web3j.zip"
 Write-Output "Downloading Web3j version ${web3j_version}..."
 Invoke-WebRequest -Uri $url -OutFile $output
