@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # URL to the checksum file
-CHECKSUM_URL="https://raw.githubusercontent.com/hyperledger/web3j-installer/main/checksum-linux.txt"
+CHECKSUM_URL="https://raw.githubusercontent.com/hyperledger-web3j/web3j-installer/main/checksum-linux.txt"
 
 fetch_checksum() {
     curl --silent "$CHECKSUM_URL"
@@ -52,7 +52,7 @@ verify_checksum() {
 # Run checksum verification
 verify_checksum
 
-tag_name=$(curl --silent "https://api.github.com/repos/hyperledger/web3j-cli/releases/latest" | jq -r .tag_name)
+tag_name=$(curl --silent "https://api.github.com/repos/hyperledger-web3j/web3j-cli/releases/latest" | jq -r .tag_name)
 web3j_version=$(echo $tag_name | sed 's/v//')
 installed_flag=0
 installed_version=""
@@ -86,10 +86,10 @@ setup_color() {
 install_web3j() {
   echo "Downloading Web3j ..."
   mkdir -p "$HOME/.web3j"
-  if [ "$(curl --write-out "%{http_code}" --silent --output /dev/null "https://github.com/hyperledger/web3j-cli/releases/download/v${web3j_version}/web3j-cli-shadow-${web3j_version}.tar")" -eq 302 ]; then
-    curl -# -L -o "$HOME/.web3j/web3j-cli-shadow-${web3j_version}.tar" "https://github.com/hyperledger/web3j-cli/releases/download/v${web3j_version}/web3j-cli-shadow-${web3j_version}.tar"
+  if [ "$(curl --write-out "%{http_code}" --silent --output /dev/null "https://github.com/hyperledger-web3j/web3j-cli/releases/download/v${web3j_version}/web3j-cli-shadow-${web3j_version}.tar")" -eq 302 ]; then
+    curl -# -L -o "$HOME/.web3j/web3j-cli-shadow-${web3j_version}.tar" "https://github.com/hyperledger-web3j/web3j-cli/releases/download/v${web3j_version}/web3j-cli-shadow-${web3j_version}.tar"
     echo "Installing Web3j..."
-    echo "https://github.com/hyperledger/web3j-cli/releases/download/v${web3j_version}/web3j-cli-shadow-${web3j_version}.tar"
+    echo "https://github.com/hyperledger-web3j/web3j-cli/releases/download/v${web3j_version}/web3j-cli-shadow-${web3j_version}.tar"
     tar -xf "$HOME/.web3j/web3j-cli-shadow-${web3j_version}.tar" -C "$HOME/.web3j"
     echo "export PATH=\$PATH:$HOME/.web3j" >"$HOME/.web3j/source.sh"
     chmod +x "$HOME/.web3j/source.sh"

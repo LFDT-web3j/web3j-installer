@@ -11,4 +11,4 @@ This script will not work if Web3j has been installed using Homebrew on macOS.
 ### How to (Windows):
 In PowerShell, run the following command:
 
-`Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/hyperledger/web3j-installer/main/installer.ps1'))`
+`Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/hyperledger-web3j/web3j-installer/main/installer.ps1'))`
