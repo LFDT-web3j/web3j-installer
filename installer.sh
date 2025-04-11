@@ -216,10 +216,10 @@ check_java_version() {
   echo "Your current java version is ${java_version}"
   # Split the Java version string into parts based on the '.' delimiter
   major_version=$(echo "$java_version" | cut -d'.' -f1)
-  if [ "$major_version" -ge 17 ]; then
+  if [ "$major_version" -ge 21 ]; then
     echo "Your Java version is compatible with Web3j CLI."
   else
-    echo "The Web3j CLI requires a Java version equals with 17 or higher. Please ensure you have a compatible Java version before installing Web3j for full functionality."
+    echo "The Web3j CLI requires a Java version equals with 21 or higher. Please ensure you have a compatible Java version before installing Web3j for full functionality."
     read -r -s -n 1 -p "Press any key to continue, or press Ctrl+C to cancel the installation." </dev/tty
   fi
 }
