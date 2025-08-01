@@ -5,7 +5,7 @@ $PSDefaultParameterValues['*:ErrorAction']='Stop'
 $ProgressPreference = 'SilentlyContinue'
 
 # URL to the checksum file
-$ChecksumUrl = "https://raw.githubusercontent.com/hyperledger-web3j/web3j-installer/main/checksum-windows.txt"
+$ChecksumUrl = "https://raw.githubusercontent.com/LFDT-web3j/web3j-installer/v4.14.0/checksum-windows.txt"
 $ScriptUrl = "https://raw.githubusercontent.com/hyperledger-web3j/web3j-installer/main/installer.ps1"
 
 # Function to fetch the pre-calculated checksum
