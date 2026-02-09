@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # URL to the checksum file
-CHECKSUM_URL="https://raw.githubusercontent.com/LFDT-web3j/web3j-installer/7c26b9510b0b91be136d65241615ecd3cb23acc7/checksum-linux.txt"
+CHECKSUM_URL="https://raw.githubusercontent.com/LFDT-web3j/web3j-installer/blob/f49b35548844257c358975cd863e24fb85685623/checksum-linux.txt"
 
 fetch_checksum() {
     curl --silent "$CHECKSUM_URL"
@@ -86,15 +86,15 @@ setup_color() {
 install_web3j() {
   echo "Downloading Web3j ..."
   mkdir -p "$HOME/.web3j"
-  if [ "$(curl --write-out "%{http_code}" --silent --output /dev/null "https://github.com/LFDT-web3j/web3j-cli/releases/download/v${web3j_version}/web3j-cli-shadow-${web3j_version}.tar")" -eq 302 ]; then
-    curl -# -L -o "$HOME/.web3j/web3j-cli-shadow-${web3j_version}.tar" "https://github.com/LFDT-web3j/web3j-cli/releases/download/v${web3j_version}/web3j-cli-shadow-${web3j_version}.tar"
+  if [ "$(curl --write-out "%{http_code}" --silent --output /dev/null "https://github.com/LFDT-web3j/web3j-cli/releases/download/v${web3j_version}/web3j-shadow-${web3j_version}.tar")" -eq 302 ]; then
+    curl -# -L -o "$HOME/.web3j/web3j-shadow-${web3j_version}.tar" "https://github.com/LFDT-web3j/web3j-cli/releases/download/v${web3j_version}/web3j-shadow-${web3j_version}.tar"
     echo "Installing Web3j..."
-    echo "https://github.com/LFDT-web3j/web3j-cli/releases/download/v${web3j_version}/web3j-cli-shadow-${web3j_version}.tar"
-    tar -xf "$HOME/.web3j/web3j-cli-shadow-${web3j_version}.tar" -C "$HOME/.web3j"
+    echo "https://github.com/LFDT-web3j/web3j-cli/releases/download/v${web3j_version}/web3j-shadow-${web3j_version}.tar"
+    tar -xf "$HOME/.web3j/web3j-shadow-${web3j_version}.tar" -C "$HOME/.web3j"
     echo "export PATH=\$PATH:$HOME/.web3j" >"$HOME/.web3j/source.sh"
     chmod +x "$HOME/.web3j/source.sh"
     echo "Removing downloaded archive..."
-    rm "$HOME/.web3j/web3j-cli-shadow-${web3j_version}.tar"
+    rm "$HOME/.web3j/web3j-shadow-${web3j_version}.tar"
   else
     echo "Looks like there was an error while trying to download web3j"
     exit 0
@@ -191,14 +191,14 @@ check_if_web3j_homebrew() {
 clean_up() {
   if [ -d "$HOME/.web3j" ]; then
     rm -f "$HOME/.web3j/source.sh"
-    rm -rf "$HOME/.web3j/web3j-cli-shadow-$installed_version" >/dev/null 2>&1
+    rm -rf "$HOME/.web3j/web3j-shadow-$installed_version" >/dev/null 2>&1
     echo "Deleting older installation ..."
   fi
 }
 
 completed() {
   cd "$HOME/.web3j"
-  ln -sf "web3j-cli-shadow-$web3j_version/bin/web3j" web3j
+  ln -sf "web3j-shadow-$web3j_version/bin/web3j" web3j
   printf '\n'
   printf "$GREEN"
   echo "Web3j was successfully installed."
