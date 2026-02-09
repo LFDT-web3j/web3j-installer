@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # URL to the checksum file
-CHECKSUM_URL="https://raw.githubusercontent.com/LFDT-web3j/web3j-installer/7c26b9510b0b91be136d65241615ecd3cb23acc7/checksum-linux.txt"
+CHECKSUM_URL="https://raw.githubusercontent.com/LFDT-web3j/web3j-installer/blob/f49b35548844257c358975cd863e24fb85685623/checksum-linux.txt"
 
 fetch_checksum() {
     curl --silent "$CHECKSUM_URL"
