@@ -62,7 +62,7 @@ args = sys.argv[1:]
 root = pathlib.Path(os.environ["TEST_ROOT"])
 with (root / "requests.jsonl").open("a") as log: log.write(json.dumps(args) + "\\n")
 script = pathlib.Path(os.environ["TEST_SCRIPT"]).read_bytes()
-if args == ["-sSfL", "https://get.web3j.io"]:
+if args == ["-L", "https://get.web3j.io"]:
     sys.stdout.buffer.write(script)
     sys.exit(0)
 required = ["--disable", "--proto", "=https", "--proto-redir", "=https",
