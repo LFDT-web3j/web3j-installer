@@ -1,0 +1,23 @@
+name: Installer download security
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Check shell syntax
+        run: sh -n installer.sh
+      - name: Test HTTPS redirects and fail-closed downloads
+        run: python -m unittest discover -s test -p 'test_downloads.py' -v
