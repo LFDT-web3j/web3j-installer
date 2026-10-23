@@ -3,6 +3,7 @@ import http.server
 import json
 import os
 from pathlib import Path
+import re
 import shlex
 import shutil
 import ssl
@@ -147,6 +148,14 @@ if scenario == "archive-error" and url.endswith(".tar"): sys.exit(18)
                            if not line.startswith(b"CHECKSUM_URL="))
         self.assertEqual(hashlib.sha256(content).hexdigest(),
                          (ROOT / "checksum-linux.txt").read_text().strip())
+
+    def test_immutable_checksum_pin_matches_the_committed_checksum(self):
+        match = re.search(r'^CHECKSUM_URL="https://raw.githubusercontent.com/LFDT-web3j/web3j-installer/([a-f0-9]{40})/checksum-linux.txt"$',
+                          SCRIPT.read_text(), re.MULTILINE)
+        self.assertIsNotNone(match, "Checksum URL must pin an immutable commit")
+        pinned = subprocess.check_output(["git", "show", match.group(1) + ":checksum-linux.txt"],
+                                         cwd=ROOT, text=True).strip()
+        self.assertEqual(pinned, (ROOT / "checksum-linux.txt").read_text().strip())
 
 
 class CurlTransportTests(unittest.TestCase):
