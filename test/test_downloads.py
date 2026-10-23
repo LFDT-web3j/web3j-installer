@@ -61,12 +61,15 @@ import hashlib, json, os, pathlib, sys
 args = sys.argv[1:]
 root = pathlib.Path(os.environ["TEST_ROOT"])
 with (root / "requests.jsonl").open("a") as log: log.write(json.dumps(args) + "\\n")
+script = pathlib.Path(os.environ["TEST_SCRIPT"]).read_bytes()
+if args == ["-sSfL", "https://get.web3j.io"]:
+    sys.stdout.buffer.write(script)
+    sys.exit(0)
 required = ["--disable", "--proto", "=https", "--proto-redir", "=https",
             "--fail", "--show-error", "--silent", "--location"]
 assert args[:len(required)] == required, args
 url = next(a for a in args if a.startswith("https://"))
 scenario = os.environ["TEST_SCENARIO"]
-script = pathlib.Path(os.environ["TEST_SCRIPT"]).read_bytes()
 digest = hashlib.sha256(b"".join(line for line in script.splitlines(keepends=True)
                                 if not line.startswith(b"CHECKSUM_URL="))).hexdigest()
 if url.endswith("checksum-linux.txt"):
@@ -112,12 +115,15 @@ if scenario == "archive-error" and url.endswith(".tar"): sys.exit(18)
                 shutil.rmtree(self.user_home / ".web3j")
                 (self.root / "extracted").unlink()
 
-    def test_legacy_pipe_downloads_and_verifies_a_complete_file(self):
-        result = self.run_installer(piped=True)
+    def test_documented_command_downloads_and_verifies_a_complete_file(self):
+        command = (ROOT / "README.md").read_text().split("```sh\n", 1)[1].split("```", 1)[0]
+        result = subprocess.run(["sh", "-c", command], text=True, capture_output=True,
+                                cwd=self.root, env=self.env, timeout=20)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((self.user_home / ".web3j/web3j").is_symlink())
         requests = [json.loads(line) for line in (self.root / "requests.jsonl").read_text().splitlines()]
-        self.assertIn("https://get.web3j.io", requests[0])
-        self.assertIn("--output", requests[0])
+        self.assertIn("https://get.web3j.io", requests[1])
+        self.assertIn("--output", requests[1])
 
     def test_failures_never_extract_or_replace_existing_files(self):
         for scenario in ("checksum-error", "empty-checksum", "wrong-checksum",
