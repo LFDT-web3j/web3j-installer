@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # URL to the checksum file
-CHECKSUM_URL="https://raw.githubusercontent.com/LFDT-web3j/web3j-installer/a28d323122cd9edba4cf39b56cadbb5c84f9b4d3/checksum-linux.txt"
+CHECKSUM_URL="https://raw.githubusercontent.com/LFDT-web3j/web3j-installer/ce8e0ff6d1ff58057add2047c96457605ef5b1da/checksum-linux.txt"
 
 # Every request, including redirects, must remain HTTPS and fail on HTTP errors.
 fetch_https() {
