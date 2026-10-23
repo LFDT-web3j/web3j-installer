@@ -1,59 +1,75 @@
 #!/bin/sh
 
 # URL to the checksum file
-CHECKSUM_URL="https://raw.githubusercontent.com/LFDT-web3j/web3j-installer/a28d323122cd9edba4cf39b56cadbb5c84f9b4d3/checksum-linux.txt"
+CHECKSUM_URL="https://raw.githubusercontent.com/LFDT-web3j/web3j-installer/603023bc4f9f6784f67f94b404ea1fa6e2634585/checksum-linux.txt"
+
+# Every request, including redirects, must remain HTTPS and fail on HTTP errors.
+fetch_https() {
+    curl --disable --proto '=https' --proto-redir '=https' \
+        --fail --show-error --silent --location "$@"
+}
 
 fetch_checksum() {
-    curl --silent "$CHECKSUM_URL"
+    fetch_https "$CHECKSUM_URL"
 }
 
-# Function to calculate the checksum of the in-memory script content
-calculate_in_memory_checksum() {
-    if [[ "$(uname)" == "Darwin" ]]; then
-      curl --silent -L get.web3j.io | sed '/^CHECKSUM_URL=/d' | shasum -a 256 | awk '{print $1}'
-    else
-      curl --silent -L get.web3j.io | sed '/^CHECKSUM_URL=/d' | sha256sum | awk '{print $1}'
+# Legacy piped invocations first download a complete file, then verify that file.
+# Never hash a second download while executing a different stream.
+if [ ! -f "$0" ]; then
+    installer_file=$(mktemp) || exit 1
+    if ! fetch_https https://get.web3j.io --output "$installer_file"; then
+        rm -f "$installer_file"
+        exit 1
     fi
-}
+    sh "$installer_file"
+    installer_status=$?
+    rm -f "$installer_file"
+    exit "$installer_status"
+fi
 
 # Function to calculate the checksum of the script file
 calculate_file_checksum() {
-  if [[ "$(uname)" == "Darwin" ]]; then
+  if [ "$(uname)" = "Darwin" ]; then
     sed '/^CHECKSUM_URL=/d' "$0" | shasum -a 256 | awk '{print $1}'
   else
     sed '/^CHECKSUM_URL=/d' "$0" | sha256sum | awk '{print $1}'
   fi
 }
 
-is_piped_execution() {
-  [ -p /dev/stdin ]
-}
-
-# Verify the integrity of the script
+# Verify the bytes of the file that is actually being executed.
 verify_checksum() {
-  FETCHED_CHECKSUM=$(fetch_checksum)
-
-  if is_piped_execution; then
-    echo "Running in-memory execution"
-    CURRENT_CHECKSUM=$(calculate_in_memory_checksum)
-  else
-    echo "Running from a file"
-    CURRENT_CHECKSUM=$(calculate_file_checksum)
-  fi
-
-  if [ "$CURRENT_CHECKSUM" = "$FETCHED_CHECKSUM" ]; then
-    echo "Checksum verification passed!"
-  else
-    echo "Script verification failed!"
+  if ! FETCHED_CHECKSUM=$(fetch_checksum); then
+    echo "Could not download the installer checksum." >&2
     exit 1
   fi
+  if ! printf '%s\n' "$FETCHED_CHECKSUM" | LC_ALL=C grep -Eq '^[[:xdigit:]]{64}$'; then
+    echo "Invalid installer checksum." >&2
+    exit 1
+  fi
+  CURRENT_CHECKSUM=$(calculate_file_checksum)
+  if [ "$CURRENT_CHECKSUM" != "$FETCHED_CHECKSUM" ]; then
+    echo "Script verification failed!" >&2
+    exit 1
+  fi
+  echo "Checksum verification passed!"
 }
 
 # Run checksum verification
 verify_checksum
 
-tag_name=$(curl --silent "https://api.github.com/repos/LFDT-web3j/web3j-cli/releases/latest" | jq -r .tag_name)
-web3j_version=$(echo $tag_name | sed 's/v//')
+if ! release_metadata=$(fetch_https "https://api.github.com/repos/LFDT-web3j/web3j-cli/releases/latest"); then
+  echo "Could not download release metadata." >&2
+  exit 1
+fi
+if ! tag_name=$(printf '%s' "$release_metadata" | jq -er '.tag_name'); then
+  echo "Invalid release metadata." >&2
+  exit 1
+fi
+if ! printf '%s\n' "$tag_name" | LC_ALL=C grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$'; then
+  echo "Invalid release tag." >&2
+  exit 1
+fi
+web3j_version=${tag_name#v}
 installed_flag=0
 installed_version=""
 
@@ -85,20 +101,26 @@ setup_color() {
 
 install_web3j() {
   echo "Downloading Web3j ..."
-  mkdir -p "$HOME/.web3j"
-  if [ "$(curl --write-out "%{http_code}" --silent --output /dev/null "https://github.com/LFDT-web3j/web3j-cli/releases/download/v${web3j_version}/web3j-shadow-${web3j_version}.tar")" -eq 302 ]; then
-    curl -# -L -o "$HOME/.web3j/web3j-shadow-${web3j_version}.tar" "https://github.com/LFDT-web3j/web3j-cli/releases/download/v${web3j_version}/web3j-shadow-${web3j_version}.tar"
-    echo "Installing Web3j..."
-    echo "https://github.com/LFDT-web3j/web3j-cli/releases/download/v${web3j_version}/web3j-shadow-${web3j_version}.tar"
-    tar -xf "$HOME/.web3j/web3j-shadow-${web3j_version}.tar" -C "$HOME/.web3j"
-    echo "export PATH=\$PATH:$HOME/.web3j" >"$HOME/.web3j/source.sh"
-    chmod +x "$HOME/.web3j/source.sh"
-    echo "Removing downloaded archive..."
-    rm "$HOME/.web3j/web3j-shadow-${web3j_version}.tar"
-  else
-    echo "Looks like there was an error while trying to download web3j"
-    exit 0
+  mkdir -p "$HOME/.web3j" || return 1
+  archive=$(mktemp "$HOME/.web3j/download.XXXXXX") || return 1
+  archive_url="https://github.com/LFDT-web3j/web3j-cli/releases/download/v${web3j_version}/web3j-shadow-${web3j_version}.tar"
+  if ! fetch_https "$archive_url" --output "$archive"; then
+    rm -f "$archive"
+    echo "Could not download Web3j; the existing installation was preserved." >&2
+    return 1
   fi
+  echo "Installing Web3j..."
+  if ! tar -xf "$archive" -C "$HOME/.web3j"; then
+    rm -f "$archive"
+    echo "Could not extract Web3j." >&2
+    return 1
+  fi
+  rm -f "$archive"
+  if [ "$installed_flag" -eq 1 ]; then
+    clean_up
+  fi
+  echo "export PATH=\$PATH:$HOME/.web3j" >"$HOME/.web3j/source.sh"
+  chmod +x "$HOME/.web3j/source.sh"
 }
 get_user_input() {
   while echo "Would you like to update Web3j [Y/n]" && read -r user_input </dev/tty ; do
@@ -220,7 +242,8 @@ check_java_version() {
     echo "Your Java version is compatible with Web3j CLI."
   else
     echo "The Web3j CLI requires a Java version equals with 21 or higher. Please ensure you have a compatible Java version before installing Web3j for full functionality."
-    read -r -s -n 1 -p "Press any key to continue, or press Ctrl+C to cancel the installation." </dev/tty
+    printf 'Press Enter to continue, or Ctrl+C to cancel the installation: '
+    read -r java_confirmation </dev/tty || exit 1
   fi
 }
 
@@ -231,12 +254,11 @@ main() {
   if [ $installed_flag -eq 1 ]; then
     check_if_web3j_homebrew
     check_version
-    clean_up
-    install_web3j
+    install_web3j || exit 1
     source_web3j
     completed
   else
-    install_web3j
+    install_web3j || exit 1
     source_web3j
     completed
   fi

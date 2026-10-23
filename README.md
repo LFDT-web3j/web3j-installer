@@ -4,7 +4,11 @@ Command line installer for Web3j
 ### How to (Linux/macOS):
 In a terminal, run the following command:
 
-`curl -L get.web3j.io | sh`
+```sh
+curl -L https://get.web3j.io | sh
+```
+
+The installer handles HTTPS-only downloads and checksum verification automatically. Failed downloads stop installation before extraction. Keep the OS/curl CA bundle current; HTTPS downloads do not replace certificate-trust updates.
 
 This script will not work if Web3j has been installed using Homebrew on macOS.
 
